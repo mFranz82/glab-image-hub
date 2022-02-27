@@ -1,0 +1,11 @@
+## Glab image hub
+
+Opencv + Flask image proxy.
+
+```
+docker build -t image-hub .
+docker run -it --rm -v ${PWD}/app:/app -p 5000:5000 -e CAM_RIGHT_URL="" -e CAM_LEFT_URL="" image-hub /bin/bash 
+
+docker run --rm --name=image-hub -v ${PWD}/app:/app -p 5000:5000 -e CAM_RIGHT_URL="" -e CAM_LEFT_URL="" image-hub
+
+```
