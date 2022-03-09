@@ -1,10 +1,18 @@
-from flask import Flask, render_template, Response, make_response
+from flask import Flask, render_template, Response, make_response, request, jsonify
 from urllib.request import urlopen
 import numpy as np
 import cv2
 from datetime import datetime
+import os
+import sys
+import base64
+
+sys.path.append(os.path.abspath('utils/'))
+import imageutils
 
 app = Flask(__name__)
+
+
 
 CAM_RIGHT_URL = os.environ['CAM_RIGHT_URL']
 CAM_LEFT_URL = os.environ['CAM_LEFT_URL']
@@ -41,13 +49,54 @@ def cam_right_stream():
 def cam_left_stream():
     return Response(gen_frames(CAM_LEFT_URL), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/cam/right/capture')
-def cam_right_capture():
+@app.route('/cam/right/download')
+def cam_right_download():
     image = get_image(CAM_RIGHT_URL)
     ret, buffer = cv2.imencode('.jpg', image)
     response = make_response(buffer.tobytes())
     response.headers['Content-Type'] = 'image/jpg'
     return response
+
+@app.route('/cam/left/download')
+def cam_left_download():
+    image = get_image(CAM_LEFT_URL)
+    ret, buffer = cv2.imencode('.jpg', image)
+    response = make_response(buffer.tobytes())
+    response.headers['Content-Type'] = 'image/jpg'
+    return response
+
+@app.route('/cam/right/view')
+def cam_right_view():
+    image = get_image(CAM_RIGHT_URL)
+    ret, buffer = cv2.imencode('.jpg', image)
+    data = base64.b64encode(buffer)
+    return render_template("image.html", img_data=data.decode('utf-8'))
+
+@app.route('/cam/left/view')
+def cam_left_view():
+    image = get_image(CAM_LEFT_URL)
+    ret, buffer = cv2.imencode('.jpg', image)
+    data = base64.b64encode(buffer)
+    return render_template("image.html", img_data=data.decode('utf-8'))
+
+
+@app.route('/cam/right/measure')
+def cam_right_measure():
+
+    drivePosition = request.args.get('drivePosition')
+    image = get_image(CAM_RIGHT_URL)
+    image, deltaYinMM, deltaYinPX, currentPosition = imageutils.measure(image, int(drivePosition))
+    ret, buffer = cv2.imencode('.jpg', image)
+    data = base64.b64encode(buffer)
+
+    response = { 
+        "deltaYinMM": int(deltaYinMM), 
+        "deltaYinPX": int(deltaYinPX), 
+        "currentPosition": int(currentPosition),
+        "image": str(data)
+    } 
+
+    return jsonify(response)
 
 
 if __name__ == '__main__':
