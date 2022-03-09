@@ -1,6 +1,7 @@
-FROM balenalib/n510-tx2-python
+FROM balenalib/raspberry-pi-python:build
 
 RUN apt-get update &&\
-    apt-get install ffmpeg libsm6 libxext6  -y
+    apt-get install gcc ffmpeg libsm6 libxext6 cmake -y
 
-RUN pip install opencv-python flask
+RUN pip install --upgrade pip setuptools wheel &&\
+    pip install numpy flask opencv-python-headless

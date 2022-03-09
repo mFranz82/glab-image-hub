@@ -1,6 +1,7 @@
 ## Glab image hub
 
 Opencv + Flask image proxy.
+Handels rectification, streaming, measurement, ....
 
 ```
 docker build -t image-hub .
